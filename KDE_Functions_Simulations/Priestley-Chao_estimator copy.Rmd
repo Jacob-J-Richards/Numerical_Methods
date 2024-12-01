@@ -1,0 +1,176 @@
+
+set class for base function and alt function
+```{r}
+validity.estimator <- function(object) {
+  # Check if h is numeric and all values are greater than zero
+  if (!is.numeric(object@h) || length(object@h) == 0 || any(object@h <= 0)) {
+    return("h must be numeric and greater than zero") 
+  }
+  
+  # Check if x and y have the same length
+  if (length(object@x) != length(object@y)) {
+    return("x and y must have the same length")
+  }
+ 
+  # Check if x and y have length greater than 1
+  if (length(object@x) <= 1 || length(object@y) <= 1) {
+    return("x and y must each have a length greater than 1")
+  }
+  return(TRUE) 
+  }
+
+setClass("estimator", representation( h = "numeric", max_xi = "numeric", 
+                                      x = "numeric", y = "numeric", MPC = "numeric",
+                                      input_argument = "numeric"), validity = validity.estimator)
+
+```
+
+part A: base function
+```{r}
+setGeneric("PC.smoother", function(object) {standardGeneric("PC.smoother")})
+
+setMethod("PC.smoother", signature= "estimator", function(object){
+  
+matrix_data <- cbind(object@x, object@y)
+
+sorted_matrix <- matrix_data[order(matrix_data[,1]),]
+
+  j <- length(object@input_argument)
+ 
+  n <- length(object@x)
+  
+  H <- object@h
+  
+  sigma <- numeric(length(object@x))
+
+  object@MPC <- numeric(j)
+  
+      for (k in 1:j) {
+                        for (i in 2:n)  { 
+                          
+                           change_in_x <- sorted_matrix[i, 1] - sorted_matrix[i - 1, 1]
+                          
+                           pdf_squared <- (dnorm((object@input_argument[k] - sorted_matrix[i, 1]) / H,0,1))^2
+                          
+                           sigma[i] <- (change_in_x*pdf_squared*sorted_matrix[i,2])/H
+                        
+                        }
+        object@MPC[k] <- sum(sigma)
+      }
+  return(object)
+})
+```
+
+Base show-function
+```{r}
+setGeneric("show", function(object) { standardGeneric("show")})
+setMethod("show", signature = "estimator", function(object) {
+    cat("input argument (first 5):", head(object@input_argument, 5),"\n")
+    cat("MPC values (first 5):", head(object@MPC, 5), "\n")
+   
+    plot(x=object@input_argument, y=object@MPC)
+    return(object)
+})
+```
+
+Base function call:
+```{r}
+
+phi<- rnorm(100)
+noise <- rnorm(100,0,1)
+gamma <- cos(3*phi) +0.1*noise
+
+plot(x=phi,y=gamma)
+
+base_object <- new("estimator", h = 1, x = phi, max_xi= numeric(), y = gamma, 
+                      MPC=numeric(), input_argument = seq(-4,4,length.out=500))
+
+object <- PC.smoother(base_object)
+
+show(object)
+```
+
+
+```{r}
+setClass("estimator2", representation( h = "numeric", max_xi = "numeric", 
+                                      x = "numeric", y = "numeric", MPC = "numeric",
+                                      input_argument = "numeric"))
+```
+
+Alternative function
+```{r}
+setGeneric("PC.smoother.maximal", function(object) { standardGeneric("PC.smoother.maximal")})
+
+setMethod("PC.smoother.maximal", signature= "estimator2", function(object){
+
+  object@x <- numeric(100)
+  object@x<- rnorm(100)
+  
+  object@h = length(object@x)^(-1/5)
+  epsilon <- rnorm(100)
+  
+  object@y <- cos(3*object@x) + 0.1*epsilon
+  
+matrix_data <- cbind(object@x, object@y)
+
+sorted_matrix <- matrix_data[order(matrix_data[,1]),]
+
+  j <- length(object@input_argument)
+ 
+  n <- length(object@x)
+  
+  H <- object@h
+  
+  sigma <- numeric(length(object@x))
+
+  object@MPC <- numeric(j)
+  
+      for (k in 1:j) {
+                        for (i in 2:n)  { 
+                          
+                           change_in_x <- sorted_matrix[i, 1] - sorted_matrix[i - 1, 1]
+                          
+                           pdf_squared <- (dnorm((object@input_argument[k] - sorted_matrix[i, 1]) / H,0,1))^2
+                          
+                           sigma[i] <- (change_in_x*pdf_squared*sorted_matrix[i,2])/H
+                        
+                        }
+        object@MPC[k] <- sum(sigma)
+      }
+  return(object)
+})
+```
+
+Find max for alternative function
+```{r}
+setGeneric("find.max", function(object) { standardGeneric("find.max")})
+setMethod("find.max", signature = "estimator2", function(object) {
+  max_xi <- numeric(10000)
+  
+  for (i in 1:10000) {
+    object <- PC.smoother.maximal(object)
+    indices  <- which.max(object@MPC)
+    max_xi[i] <- object@input_argument[indices]  
+  }
+  
+  object@max_xi <- max_xi  
+  
+  cat("Mean of max_xi:", mean(object@max_xi), "\n")
+  cat("Standard deviation of max_xi:", sd(object@max_xi), "\n")
+  
+  return(object)  
+})
+
+```
+
+alternative function: function call sequence
+```{r}
+maximal_object <- new("estimator2", h = 1, x = 1, max_xi= numeric(), y = 1, 
+                      MPC=numeric(), input_argument = seq(-4,4,length.out=500))
+
+start_time <- Sys.time()
+find.max(maximal_object)
+end_time <- Sys.time()
+time_taken <- end_time - start_time
+(time_taken)
+```
