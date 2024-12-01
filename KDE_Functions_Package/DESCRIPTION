@@ -1,0 +1,18 @@
+Package: Kernel.Density.Estimators
+Title: Parzen_Rosenblatt, Priestley_Chao, and Nadaraya_Watson KDEs Implimentation
+Version: 0.0.0.9000
+Authors@R: 
+    person("Jacob", "Richards", , "Jrich033@odu.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Priestley_Chao(user_data_x,user_data_y,user_input_h,user_input_arg)
+             Parzen_Rosenblatt(user_data,user_input_h,user_input)
+             Nadaraya_Watson(user_data_x,user_data_y,user_input_h,user_input_arg)
+             Try these:
+             Priestley_Chao(seq(-3.14,3.14,by=.1),cos(seq(-3.14,3.14,by=.1)),1,seq(-3.14,3.14,by=.01))
+             Parzen_Rosenblatt(rnorm(100),1,seq(-3,3,length.out=500)) 
+             Nadaraya_Watson(seq(-3.14,3.14,by=.1),cos(seq(-3.14,3.14,by=.1)),1,seq(-3.14,3.14,by=.01))
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
